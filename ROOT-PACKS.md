@@ -1,7 +1,11 @@
 # Personal fork: root pack references
 
 Based on upstream Packed Packs v2.3.1+1.21.1 (MIT), for Minecraft 1.21.1.
-Personal build version: 2.3.1-root.3+1.21.1.
+Personal build version: 2.3.1-root.4+1.21.1.
+
+The pack context menu always includes Copy to Clipboard, even with developer
+mode off. It copies the canonical pack ID (for example `file/Fresh Paintings.zip`),
+matching the original action. It appears once in either mode.
 
 Grouped file packs show a small badge at the bottom-left of their pack icon:
 a blue house for root references, or a gold folder for relative packs. Hover

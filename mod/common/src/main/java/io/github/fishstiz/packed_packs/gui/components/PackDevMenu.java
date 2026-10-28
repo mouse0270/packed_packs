@@ -15,7 +15,6 @@ import io.github.fishstiz.packed_packs.transform.interfaces.ConfiguredPack;
 import io.github.fishstiz.packed_packs.util.Colors;
 import io.github.fishstiz.packed_packs.util.GuiUtils;
 import io.github.fishstiz.packed_packs.util.PackUtil;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.WidgetSprites;
@@ -141,10 +140,6 @@ class PackDevMenu {
     }
 
     private void updateNonOverrideEntries(FZContextMenu.Collector collector) {
-        collector.addEntry(builder -> buildDevEntry(builder)
-                .message(Component.translatable("chat.copy"))
-                .onPress(() -> Minecraft.getInstance().keyboardHandler.setClipboard(entry.pack.id())));
-
         collector.addEntry(builder -> buildDevEntry(builder)
                 .message(Component.translatable("packed_packs.aliases.edit"))
                 .onPress(() -> context.dispatch(new PackListIntent.OpenAliasesModal(entry.key(), entry.pack))));

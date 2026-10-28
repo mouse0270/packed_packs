@@ -31,6 +31,7 @@ import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.layouts.LayoutElement;
@@ -888,6 +889,10 @@ public class PackList extends FZAbstractListWidget<PackList.Entry> implements Fo
             }
 
             entryFactory.apply(ContextMenuEvent.PackEntry.Pos.AFTER_DEV).forEach(collector::addEntry);
+
+            collector.addEntry(builder -> builder
+                    .message(Component.translatable("chat.copy"))
+                    .onPress(() -> Minecraft.getInstance().keyboardHandler.setClipboard(pack.id())));
 
             if (pack instanceof PackNode.Parent) {
                 collector.addEntry(builder -> builder
