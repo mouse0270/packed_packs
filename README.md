@@ -1,5 +1,8 @@
 # 📦 Packed Packs
 
+Personal Minecraft 1.21.1 fork: [root-level pack references and testing instructions](ROOT-PACKS.md).
+Keep launcher-managed resource packs at the root while grouping them with `root/Filename.zip`.
+
 Pack resource and data packs into profiles with multiple selection, drag and drop, and extended mouse and keyboard
 controls.
 

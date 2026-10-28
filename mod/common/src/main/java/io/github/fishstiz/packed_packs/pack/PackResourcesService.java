@@ -5,6 +5,7 @@ import io.github.fishstiz.packed_packs.config.JsonLoader;
 import io.github.fishstiz.packed_packs.config.ProfileManager;
 import io.github.fishstiz.packed_packs.gui.states.ProfileSelection;
 import io.github.fishstiz.packed_packs.util.PackUtil;
+import io.github.fishstiz.packed_packs.util.FolderPackIds;
 import net.minecraft.server.packs.PackType;
 
 import java.nio.file.Files;
@@ -72,14 +73,11 @@ public class PackResourcesService {
         if (parentNode != null) {
             FolderPackMeta parentMeta = repository.getFolderMetadata(parentNode.id());
             if (parentMeta != null) {
-                boolean matchRelative = false;
-                String oldRelativeId = PackUtil.replaceDirsWithRelative(pack.id());
                 int index = -1;
 
                 for (int i = 0; i < parentMeta.packIds().size(); i++) {
                     String packId = parentMeta.packIds().get(i);
-                    matchRelative = packId.equals(oldRelativeId);
-                    if (matchRelative || packId.equals(pack.id())) {
+                    if (FolderPackIds.resolve(packId, parentNode.id()).equals(pack.id())) {
                         index = i;
                         break;
                     }
@@ -87,7 +85,7 @@ public class PackResourcesService {
 
                 if (index != -1) {
                     List<String> packIds = new ArrayList<>(parentMeta.packIds());
-                    packIds.set(index, matchRelative ? PackUtil.replaceDirsWithRelative(newId) : newId);
+                    packIds.set(index, FolderPackIds.serialize(newId, parentNode.id()));
                     saveFolderMetadata(parentNode, new FolderPackMeta(parentMeta.module(), packIds));
                 }
             }
@@ -130,7 +128,7 @@ public class PackResourcesService {
 
     public static List<String> replaceDirsWithRelative(List<PackNode> packs) {
         return packs.stream()
-                .map(pack -> pack.parentId() == null ? pack.id() : PackUtil.replaceDirsWithRelative(pack.id()))
+                .map(pack -> FolderPackIds.serialize(pack.id(), pack.parentId()))
                 .toList();
     }
 }

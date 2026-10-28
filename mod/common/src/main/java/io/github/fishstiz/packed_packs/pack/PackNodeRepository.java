@@ -12,6 +12,7 @@ import io.github.fishstiz.packed_packs.transform.mixin.PackSelectionModelAccesso
 import io.github.fishstiz.packed_packs.transform.mixin.folders.additional.FolderRepositorySourceAccessor;
 import io.github.fishstiz.packed_packs.transform.mixin.folders.additional.PackRepositoryAccessor;
 import io.github.fishstiz.packed_packs.util.PackUtil;
+import io.github.fishstiz.packed_packs.util.FolderPackIds;
 import it.unimi.dsi.fastutil.objects.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.OptionInstance;
@@ -192,7 +193,7 @@ public class PackNodeRepository {
         Set<String> seen = new ObjectOpenHashSet<>();
 
         for (String id : orderedIds) {
-            PackNode pack = packs.get(id.startsWith("relative/") ? id.replaceFirst("^relative", parent.id()) : id);
+            PackNode pack = packs.get(FolderPackIds.resolve(id, parent.id()));
             if (pack != null && children.contains(pack.id()) && seen.add(pack.id())) {
                 collector.accept(pack);
             }
@@ -302,7 +303,7 @@ public class PackNodeRepository {
         Map<String, List<PackNode.Leaf>> virtualChildrenByFolder = new Object2ObjectOpenHashMap<>();
         Set<String> seenVirtualChildren = new ObjectOpenHashSet<>();
 
-        for (Map.Entry<String, FolderPackMeta> entry : folderMeta.entrySet()) {
+        for (Map.Entry<String, FolderPackMeta> entry : new TreeMap<>(folderMeta).entrySet()) {
             String folderId = entry.getKey();
             if (!(newPacks.get(folderId) instanceof PackNode.Parent folder)) continue;
 
@@ -310,9 +311,10 @@ public class PackNodeRepository {
             List<PackNode.Leaf> virtualChildren = new ObjectArrayList<>(claimedIds.size());
 
             for (String id : claimedIds) {
-                PackNode candidate = newPacks.get(id);
-                // non file-packs can be added to folders virtually (for adding built-in packs)
-                if (candidate instanceof PackNode.Leaf leaf && leaf.path() == null && leaf.parentId() == null) {
+                PackNode candidate = newPacks.get(FolderPackIds.resolve(id, folderId));
+                // Built-in packs and explicitly referenced root files can be virtual children.
+                if (candidate instanceof PackNode.Leaf leaf && leaf.parentId() == null &&
+                        (leaf.path() == null || (FolderPackIds.isRoot(id) && leaf.path().toAbsolutePath().normalize().getParent().equals(packDir.toAbsolutePath().normalize())))) {
                     if (seenVirtualChildren.add(leaf.id())) {
                         virtualChildren.add(leaf);
                     } else {
@@ -362,6 +364,13 @@ public class PackNodeRepository {
             }
         }
 
+        // Refresh immutable ancestor snapshots after virtual children were attached.
+        if (!virtualChildrenByFolder.isEmpty()) {
+            for (PackNode node : List.copyOf(newPacks.values())) {
+                if (node.parentId() == null) refreshChildSnapshots(node.id(), newPacks);
+            }
+        }
+
         this.packs = newPacks;
         folderMeta.keySet().retainAll(newPacks.keySet());
         refreshSelectedCache();
@@ -369,6 +378,17 @@ public class PackNodeRepository {
         if (PackedPacks.DEBUG) {
             PackedPacks.LOGGER.info("[packed_packs] ======== Repository Sources Refreshed in {}ms ========", PackedPacks.duration(start));
         }
+    }
+
+    private PackNode refreshChildSnapshots(String id, Map<String, PackNode> nodes) {
+        PackNode node = nodes.get(id);
+        if (node instanceof PackNode.Parent parent) {
+            List<PackNode> children = parent.children().stream()
+                    .map(child -> refreshChildSnapshots(child.id(), nodes)).toList();
+            node = new PackNode.Parent(parent.parentId(), parent.path(), parent.location(), parent.resourcesSupplier(), children);
+            nodes.put(id, node);
+        }
+        return node;
     }
 
     private PackNode buildNode(

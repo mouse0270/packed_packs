@@ -31,6 +31,7 @@ import io.github.fishstiz.packed_packs.pack.PackNode;
 import io.github.fishstiz.packed_packs.pack.PackSelection;
 import io.github.fishstiz.packed_packs.pack.PackWatcher;
 import io.github.fishstiz.packed_packs.util.PackUtil;
+import io.github.fishstiz.packed_packs.util.FolderPackIds;
 import io.github.fishstiz.packed_packs.util.ToastUtil;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
@@ -216,18 +217,19 @@ public class Store implements FZRef<PackedPacksState> {
         List<String> prevPackIds = repository.getFolderMetadata(parent).packIds();
 
         Set<String> visibleIds = folder.packs().stream()
-                .flatMap(pack -> Stream.of(pack.id(), PackUtil.replaceDirsWithRelative(pack.id())))
+                .flatMap(pack -> Stream.of(pack.id(), PackUtil.replaceDirsWithRelative(pack.id()), FolderPackIds.serialize(pack.id(), pack.parentId())))
                 .collect(Collectors.toCollection(ObjectOpenHashSet::new));
         Set<String> childrenIds = parent.children().stream()
-                .flatMap(pack -> Stream.of(pack.id(), PackUtil.replaceDirsWithRelative(pack.id())))
+                .flatMap(pack -> Stream.of(pack.id(), PackUtil.replaceDirsWithRelative(pack.id()), FolderPackIds.serialize(pack.id(), pack.parentId())))
                 .collect(Collectors.toCollection(ObjectOpenHashSet::new));
         List<String> newPackIds = folder.packs().stream()
-                .map(pack -> pack.parentId() == null ? pack.id() : PackUtil.replaceDirsWithRelative(pack.id()))
+                .map(pack -> FolderPackIds.serialize(pack.id(), pack.parentId()))
                 .collect(Collectors.toCollection(ObjectArrayList::new));
 
         int insertAt = 0;
         for (String id : prevPackIds) {
-            if (!visibleIds.contains(id) && childrenIds.contains(id)) {
+            // Keep temporarily missing root references (for example during launcher updates).
+            if (!visibleIds.contains(id) && (childrenIds.contains(id) || FolderPackIds.isRoot(id))) {
                 newPackIds.add(insertAt, id);
             }
             insertAt++;
