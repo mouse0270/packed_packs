@@ -147,7 +147,7 @@ class PackWidget implements Renderable, LayoutElement {
     }
 
     boolean isLocationBadgeHovered(double mouseX, double mouseY) {
-        int left = x + SPACING + ICON_SIZE - BADGE_SIZE;
+        int left = x + SPACING;
         int top = y + ICON_SIZE - BADGE_SIZE;
         return hasLocationBadge && entry.isHovered()
                 && mouseX >= left && mouseX < left + BADGE_SIZE
@@ -157,7 +157,7 @@ class PackWidget implements Renderable, LayoutElement {
     // Draw after the selection/action overlays so the badge stays legible.
     void renderLocationBadge(GuiGraphics graphics, int mouseX, int mouseY, boolean allowTooltip) {
         if (!hasLocationBadge) return;
-        int left = x + SPACING + ICON_SIZE - BADGE_SIZE;
+        int left = x + SPACING;
         int top = y + ICON_SIZE - BADGE_SIZE;
         int color = rootReference ? 0xFF8DCEFF : 0xFFFFD580;
         graphics.fill(left, top, left + BADGE_SIZE, top + BADGE_SIZE, 0xF0181C24);
