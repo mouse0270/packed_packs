@@ -2,6 +2,7 @@ package io.github.fishstiz.packed_packs.gui.components;
 
 import io.github.fishstiz.fidgetz.v0.gui.components.FZText;
 import io.github.fishstiz.fidgetz.v0.utils.GuiGraphicsUtils;
+import io.github.fishstiz.packed_packs.util.FolderPackIds;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -21,10 +22,20 @@ class PackWidget implements Renderable, LayoutElement {
     private static final Component INCOMPATIBLE_TITLE = Component.translatable("pack.incompatible");
     private static final int DESCRIPTION_LINES = 2;
     private static final int SPACING = 2;
+    private static final int BADGE_SIZE = 11;
+    private static final String[] ROOT_ICON = {
+            "...#...", "..###..", ".#####.", "#######", ".#####.", ".##.##.", ".##.##."
+    };
+    private static final String[] RELATIVE_ICON = {
+            ".###...", "#######", "#.....#", "#.....#", "#.....#", "#.....#", "#######"
+    };
     private final Font font;
     private final PackList.Entry entry;
     private final FZText nameWidget;
     private final MultiLineTextWidget descriptionWidget;
+    private final boolean hasLocationBadge;
+    private final boolean rootReference;
+    private final Component locationTooltip;
     private int cachedBodyWidth;
     private boolean warningShown;
     private int x;
@@ -38,6 +49,15 @@ class PackWidget implements Renderable, LayoutElement {
         this.nameWidget = FZText.builder(entry.pack.title()).build();
         this.height = height;
         this.descriptionWidget = new MultiLineTextWidget(getExtendedDescription(), font);
+        String reference = FolderPackIds.serialize(entry.pack.id(), entry.pack.parentId());
+        this.rootReference = FolderPackIds.isRoot(reference);
+        this.hasLocationBadge = entry.pack.path() != null && entry.pack.parentId() != null
+                && (rootReference || reference.startsWith("relative/"));
+        this.locationTooltip = hasLocationBadge
+                ? Component.translatable(rootReference ? "packed_packs.location.root" : "packed_packs.location.relative")
+                    .append("\n").append(Component.literal(entry.pack.path().toAbsolutePath().normalize().toString())
+                            .withStyle(Style.EMPTY.withColor(CommonColors.GRAY)))
+                : Component.empty();
         repositionElements();
     }
 
@@ -124,6 +144,35 @@ class PackWidget implements Renderable, LayoutElement {
         GuiGraphicsUtils.texture(graphics, entry.getPackIcon(), x + SPACING, y, ICON_SIZE, ICON_SIZE);
         nameWidget.render(graphics, mouseX, mouseY, partialTick);
         this.descriptionWidget.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    boolean isLocationBadgeHovered(double mouseX, double mouseY) {
+        int left = x + SPACING + ICON_SIZE - BADGE_SIZE;
+        int top = y + ICON_SIZE - BADGE_SIZE;
+        return hasLocationBadge && entry.isHovered()
+                && mouseX >= left && mouseX < left + BADGE_SIZE
+                && mouseY >= top && mouseY < top + BADGE_SIZE;
+    }
+
+    // Draw after the selection/action overlays so the badge stays legible.
+    void renderLocationBadge(GuiGraphics graphics, int mouseX, int mouseY, boolean allowTooltip) {
+        if (!hasLocationBadge) return;
+        int left = x + SPACING + ICON_SIZE - BADGE_SIZE;
+        int top = y + ICON_SIZE - BADGE_SIZE;
+        int color = rootReference ? 0xFF8DCEFF : 0xFFFFD580;
+        graphics.fill(left, top, left + BADGE_SIZE, top + BADGE_SIZE, 0xF0181C24);
+        graphics.renderOutline(left, top, BADGE_SIZE, BADGE_SIZE, color);
+        String[] pixels = rootReference ? ROOT_ICON : RELATIVE_ICON;
+        for (int row = 0; row < pixels.length; row++) {
+            for (int col = 0; col < pixels[row].length(); col++) {
+                if (pixels[row].charAt(col) == '#') {
+                    graphics.fill(left + 2 + col, top + 2 + row, left + 3 + col, top + 3 + row, color);
+                }
+            }
+        }
+        if (allowTooltip && isLocationBadgeHovered(mouseX, mouseY) && Minecraft.getInstance().screen != null) {
+            Minecraft.getInstance().screen.setTooltipForNextRenderPass(locationTooltip);
+        }
     }
 
     void checkCompatibility(boolean showWarning) {

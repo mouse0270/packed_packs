@@ -1,7 +1,13 @@
 # Personal fork: root pack references
 
 Based on upstream Packed Packs v2.3.1+1.21.1 (MIT), for Minecraft 1.21.1.
-Personal build version: 2.3.1-root.1+1.21.1.
+Personal build version: 2.3.1-root.2+1.21.1.
+
+Grouped file packs show a small badge at the bottom-right of their pack icon:
+a blue house for root references, or a gold folder for relative packs. Hover
+over the badge to see the storage type and full file path. The badge does not
+transfer or reorder packs when clicked. Built-in packs and ungrouped root packs
+have no location badge.
 
 Keep launcher-managed ZIPs directly in `resourcepacks`, and reference them from
 `resourcepacks/My Group/packed_packs.folderpack.json`:

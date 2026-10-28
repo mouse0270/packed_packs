@@ -74,5 +74,7 @@
   "packed_packs.preferences.widgets.etf_button": "ETF Button",
   "packed_packs.preferences.widgets.respackopts_button": "Respackopts Buttons",
   "packed_packs.preferences.widgets.vtd_button": "VTD Button",
-  "packed_packs.preferences.widgets.vtd_edit_button": "VTD Edit Buttons"
+  "packed_packs.preferences.widgets.vtd_edit_button": "VTD Edit Buttons",
+  "packed_packs.location.root": "Root reference — stored in the main pack directory",
+  "packed_packs.location.relative": "Relative pack — stored inside this group folder"
 }

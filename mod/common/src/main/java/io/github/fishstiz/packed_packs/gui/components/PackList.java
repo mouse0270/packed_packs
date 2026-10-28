@@ -669,6 +669,10 @@ public class PackList extends FZAbstractListWidget<PackList.Entry> implements Fo
 
         @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            // The location badge is informational, not a transfer/reorder control.
+            if (isLeftClick(button) && packWidget != null && packWidget.isLocationBadgeHovered(mouseX, mouseY)) {
+                return true;
+            }
             if (super.mouseClicked(mouseX, mouseY, button) || isRightClick(button)) {
                 if (!PackList.this.state.isFolderOpened()) return true;
                 // ideally folderWidget should return false on #shouldTakeFocusAfterInteraction,
@@ -779,6 +783,7 @@ public class PackList extends FZAbstractListWidget<PackList.Entry> implements Fo
         }
 
         private void renderWidgetSprites(GuiGraphics graphics, int top, int left, int mouseX, int mouseY) {
+            if (packWidget != null && packWidget.isLocationBadgeHovered(mouseX, mouseY)) return;
             boolean hovered = isHovered() && fidgetz$getHovered() == null;
             if ((!hovered && !isFocused()) || PackList.this.state.isDragging()) return;
 
@@ -839,6 +844,7 @@ public class PackList extends FZAbstractListWidget<PackList.Entry> implements Fo
 
             renderSelection(graphics, top, left, width, height);
             renderWidgetSprites(graphics, innerTop, innerLeft, mouseX, mouseY);
+            packWidget.renderLocationBadge(graphics, mouseX, mouseY, !PackList.this.state.isDragging());
 
             if (!renderables.isEmpty()) {
                 graphics.pose().pushPose();
